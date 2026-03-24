@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Puranghat College</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .admin-container { max-width: 1100px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        h2 { color: #004d40; text-align: center; border-bottom: 2px solid #ff9800; padding-bottom: 10px; }
+        
+        /* Table Style */
+        .table-wrapper { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
+        th { background-color: #004d40; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+        
+        .btn-print { background: #ff9800; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; float: right; margin-bottom: 10px; font-weight: bold; }
+        
+        /* Login Overlay */
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #004d40; display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .login-box { background: white; padding: 30px; border-radius: 10px; text-align: center; }
+        input { padding: 10px; width: 200px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay">
+    <div class="login-box">
+        <h3>Admin Access</h3>
+        <input type="password" id="adminPass" placeholder="Enter Password"> <br>
+        <button class="btn-print" onclick="checkPass()" style="float:none">Login</button>
+    </div>
+</div>
+
+<div class="admin-container">
+    <button class="btn-print" onclick="window.print()">Print List</button>
+    <h2>Student Admission List - 2026</h2>
+    
+    <div class="table-wrapper">
+        <table id="studentTable">
+            <thead>
+                <tr>
+                    <th>Roll</th>
+                    <th>Name</th>
+                    <th>Father's Name</th>
+                    <th>Mobile</th>
+                    <th>Group</th>
+                    <th>Board</th>
+                    <th>Applied At</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // আপনার Firebase Config (আগের ফাইল থেকে হুবহু কপি করে এখানে বসান)
+    const firebaseConfig = {
+        apiKey: "AIzaSyB9hqyxFgrcn6Pu1AM3h7n15f6UMuuaWyk",
+        authDomain: "puranghatcollege-1faa9.firebaseapp.com",
+        projectId: "puranghatcollege-1faa9",
+        storageBucket: "puranghatcollege-1faa9.firebasestorage.app",
+        messagingSenderId: "393347326332",
+        appId: "1:393347326332:web:b27488c0ba0132b72404f9",
+        databaseURL: "https://puranghatcollege-1faa9-default-rtdb.firebaseio.com"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Password Protection Function
+    function checkPass() {
+        const pass = document.getElementById('adminPass').value;
+        if(pass === "Shuvo1@") { // এখানে আপনার নিজের পাসওয়ার্ড সেট করুন
+            document.getElementById('loginOverlay').style.display = 'none';
+            loadData();
+        } else {
+            alert("Wrong Password!");
+        }
+    }
+
+    // Load Data from Firebase
+    function loadData() {
+        const tableBody = document.getElementById('tableBody');
+        
+        db.ref('admissions').on('value', (snapshot) => {
+            tableBody.innerHTML = ""; // Clear existing data
+            snapshot.forEach((childSnapshot) => {
+                const data = childSnapshot.val();
+                let row = `<tr>
+                    <td>${data.ssc_roll}</td>
+                    <td>${data.student_name}</td>
+                    <td>${data.father_name}</td>
+                    <td>${data.mobile}</td>
+                    <td>${data.group}</td>
+                    <td>${data.board}</td>
+                    <td>${data.submitted_at}</td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            });
+        });
+    }
+</script>
+
+</body>
+</html>
