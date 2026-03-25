@@ -114,12 +114,12 @@
                 let row = `<tr>
                     <td><img src="${data.student_photo || 'https://via.placeholder.com/50'}" class="student-img" onclick="window.open(this.src)"></td>
                     <td><b>${data.ssc_roll}</b></td>
-                    <td>${data.ssc_registration}</td>
+                    <td>${data.ssc_reg}</td>
                     <td>${data.student_name}</td>
                     <td>${data.father_name}</td>
                     <td>${data.mobile}</td>
                     <td>${data.group}</td>
-                    <td>${data.gpa}</td>
+                    <td>${data.ssc_gpa}</td>
                     <td>${data.submitted_at || 'N/A'}</td>
                 </tr>`;
                 tableBody.innerHTML += row;
