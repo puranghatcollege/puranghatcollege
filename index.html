@@ -261,7 +261,8 @@
                 </div>
                 <div class="form-group">
                     <label>District:</label>
-                    <select id="district" required>
+                    <select id="district" name="district" required onchange="updateUpazila()">
+                        <option value="Select District ">Select District </option>
                         <option value="Bagerhat">Bagerhat</option>
 <option value="Bandarban">Bandarban</option>
 <option value="Barguna">Barguna</option>
@@ -328,6 +329,12 @@
 <option value="Thakurgaon">Thakurgaon</option>
                         </select>
                 </div>
+                <div class="form-group">
+    <label>Upazila</label>
+    <select id="upazila" name="upazila" required>
+        <option value="">Select District First</option>
+    </select>
+                </div>
             </div>
     <div class="form-group">
         <label>Select 4th Subject (Optional):</label>
@@ -374,7 +381,36 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // ২. Data Submission Function
+    // ২. Data Submission Function 
+function updateUpazila() {
+    const districtSelect = document.getElementById("district");
+    const upazilaSelect = document.getElementById("upazila");
+    const selectedDistrict = districtSelect.value;
+
+    // উপজেলার ডাটা অবজেক্ট
+    const upazilaData = {
+        "Sunamganj": [
+            "Sunamganj Sadar", "Shantiganj", "Chhatak", "Jagannathpur", 
+            "Doarabazar", "Bishwambarpur", "Tahirpur", "Dharmapasha", 
+            "Jamalganj", "Dirai", "Shalla", "Madhyanagar"
+        ],
+        // আপনি চাইলে এখানে অন্য জেলার উপজেলার লিস্টও একইভাবে যোগ করতে পারেন
+        "Dhaka": ["Dhamrai", "Dohar", "Keraniganj", "Nawabganj", "Savar"]
+    };
+
+    // আগের অপশনগুলো ক্লিয়ার করা
+    upazilaSelect.innerHTML = '<option value="">Select Upazila</option>';
+
+    if (selectedDistrict && upazilaData[selectedDistrict]) {
+        // নতুন উপজেলাগুলো ড্রপডাউনে যোগ করা
+        upazilaData[selectedDistrict].forEach(function(upazila) {
+            let option = document.createElement("option");
+            option.value = upazila;
+            option.text = upazila;
+            upazilaSelect.appendChild(option);
+        });
+    }
+}
     function submitApplication() {
         const form = document.getElementById('admissionForm');
         
