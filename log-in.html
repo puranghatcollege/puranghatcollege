@@ -3,7 +3,297 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Puranghat College</title><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel | Puranghat College</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
+    <style>
+        /* মূল লেআউট এবং ফুটার সেটআপ */
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: #f4f7f6; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
+        }
+
+        .admin-container { 
+            max-width: 1200px; 
+            margin: 20px auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1); 
+            flex: 1;
+            width: 95%;
+        }
+
+        h2 { color: #004d40; text-align: center; border-bottom: 2px solid #ff9800; padding-bottom: 10px; }
+        
+        .search-box { 
+            width: 100%; 
+            max-width: 500px; 
+            margin: 10px auto 20px; 
+            display: block; 
+            padding: 12px 20px; 
+            border: 2px solid #004d40; 
+            border-radius: 30px; 
+            outline: none; 
+        }
+
+        /* ডিপার্টমেন্ট ফিল্টার বাটন */
+        .dept-btn-container { text-align: center; margin-bottom: 20px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+        .dept-btn { padding: 8px 18px; border-radius: 20px; border: 1px solid #004d40; background: white; color: #004d40; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .dept-btn:hover, .dept-btn.active { background: #004d40; color: white; }
+
+        /* টেবিল ডিজাইন */
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
+        th { background-color: #004d40; color: white; }
+        .student-img { width: 45px; height: 45px; border-radius: 5px; object-fit: cover; border: 1px solid #ddd; }
+
+        /* স্টুডেন্ট স্লিপ ডিজাইন (স্ক্রিনশট অনুযায়ী) */
+        .student-slip-container {
+            background: #fff;
+            padding: 40px;
+            border: 2px solid #004d40;
+            border-radius: 15px;
+            margin-top: 20px;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .slip-header { text-align: center; border-bottom: 2px solid #ff9800; padding-bottom: 15px; margin-bottom: 20px; }
+        .student-photo-large { 
+            width: 130px; 
+            height: 140px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            object-fit: cover; 
+            position: absolute; 
+            top: 40px; 
+            right: 40px; 
+        }
+
+        .slip-details p { font-size: 16px; margin: 10px 0; border-bottom: 1px dashed #eee; padding-bottom: 5px; color: #333; }
+        .slip-details b { color: #004d40; width: 140px; display: inline-block; }
+
+        .btn-print { background: #004d40; color: white; padding: 10px 25px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-logout { background: #777; color: white; padding: 10px 25px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 10px; }
+
+        /* লগইন ডিজাইন */
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #004d40; display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .login-box { background: white; padding: 40px; border-radius: 15px; text-align: center; width: 350px; }
+        .login-box input { padding: 12px; width: 100%; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+
+        footer { background: #004d40; color: white; padding: 25px; text-align: center; border-top: 4px solid #ff9800; margin-top: auto; }
+
+        @media print {
+            .btn-print, .btn-logout, .search-box, .dept-btn-container, #loginOverlay, footer, .no-print { display: none !important; }
+            body { padding: 0; background: white; }
+            .student-slip-container { box-shadow: none; border: 2px solid #004d40; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="loginOverlay">
+    <div class="login-box">
+        <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
+            <a href="https://puranghatcollege.github.io/puranghatcollege/home.html" style="text-decoration:none;">
+                <img src="https://i.ibb.co/5g8GNqJs/636880279-887390993920777-8859387215607161775-n.jpg" alt="College Logo" style="width: 80px; height: 80px; border-radius: 50%; border: 2px solid #004d40; padding: 2px;">
+                <h2 style="margin: 10px 0 0; color: #004d40; font-size: 22px; border:none;">Puranghat College</h2>
+            </a>
+            <p style="margin: 2px 0; font-size: 12px; color: #666; font-weight: bold;">Tahirpur, Sunamganj</p>
+        </div>
+
+        <h3 style="color: #444; margin-bottom: 20px; font-size: 18px;">Login Portal</h3>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button id="btnStudent" onclick="switchLogin('student')" style="flex: 1; padding: 12px; border: 2px solid #004d40; border-radius: 8px; cursor: pointer; font-weight: bold; background: #004d40; color: white;">🎓 Student</button>
+            <button id="btnAdmin" onclick="switchLogin('admin')" style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: bold; background: white; color: #333;">👨‍🏫 Teacher</button>
+        </div>
+
+        <input type="text" id="userInput" placeholder="Enter ID">
+        <input type="password" id="passInput" placeholder="Enter Password">
+        <button class="btn-print" style="width:100%; padding:15px;" onclick="checkLogin()">Login Access</button>
+        <input type="hidden" id="currentRole" value="student">
+    </div>
+</div>
+
+<div class="admin-container">
+    <div id="mainContent">
+        <button class="btn-print" style="float:right;" onclick="window.print()">Print This List</button>
+        <h2>Student Admission List - 2026</h2>
+        
+        <input type="text" id="searchInput" class="search-box" onkeyup="searchTable()" placeholder="Roll or Name...">
+
+        <div class="dept-btn-container">
+            <button class="dept-btn active" onclick="loadData()">All Students</button>
+            <button class="dept-btn" onclick="filterByDept('Science')">Science</button>
+            <button class="dept-btn" onclick="filterByDept('Humanities')">Humanities</button>
+            <button class="dept-btn" onclick="filterByDept('Business Studies')">Business Studies</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="studentTable">
+                <thead>
+                    <tr>
+                        <th>Photo</th><th>Roll</th><th>Registration</th><th>Name</th><th>Father's Name</th><th>Mobile</th><th>Group</th><th>GPA</th><th>Applied At</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<footer id="mainFooter" style="display: none">
+    &copy; 2026 <a href="https://puranghatcollege.github.io/puranghatcollege/home.html" style="color:#ff9800; text-decoration:none;"><b>Puranghat College</b></a> | Developed by <b>Shuvo</b>
+</footer>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyB9hqyxFgrcn6Pu1AM3h7n15f6UMuuaWyk",
+        authDomain: "puranghatcollege-1faa9.firebaseapp.com",
+        projectId: "puranghatcollege-1faa9",
+        storageBucket: "puranghatcollege-1faa9.firebasestorage.app",
+        messagingSenderId: "393347326332",
+        appId: "1:393347326332:web:b27488c0ba0132b72404f9",
+        databaseURL: "https://puranghatcollege-1faa9-default-rtdb.firebaseio.com"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function switchLogin(role) {
+        document.getElementById('currentRole').value = role;
+        const sBtn = document.getElementById('btnStudent');
+        const aBtn = document.getElementById('btnAdmin');
+        
+        if(role === 'student'){
+            sBtn.style.background = '#004d40'; sBtn.style.color = 'white';
+            aBtn.style.background = 'white'; aBtn.style.color = '#333'; aBtn.style.border = '1px solid #ddd';
+        } else {
+            aBtn.style.background = '#004d40'; aBtn.style.color = 'white';
+            sBtn.style.background = 'white'; sBtn.style.color = '#333'; sBtn.style.border = '1px solid #ddd';
+        }
+    }
+
+    function checkLogin() {
+        const role = document.getElementById('currentRole').value;
+        const user = document.getElementById('userInput').value.trim();
+        const pass = document.getElementById('passInput').value.trim();
+
+        if (role === "admin") {
+            if (user === "admin" && pass === "Tabassum#@") {
+                document.getElementById('loginOverlay').style.display = 'none';
+                loadData();
+            } else { alert("ভুল তথ্য!"); }
+        } else {
+            checkStudentLogin(user, pass);
+        }
+    }
+
+    function checkStudentLogin(id, pass) {
+        db.ref('admissions').orderByChild('user_id').equalTo(id).once('value', snapshot => {
+            if (snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const data = child.val();
+                    if(data.student_pass === pass) {
+                        document.getElementById('loginOverlay').style.display = 'none';
+                        document.getElementById('mainFooter').style.display = 'block';
+                        document.getElementById('mainContent').innerHTML = `
+                            <div class="student-slip-container">
+                                <div class="slip-header">
+                                    <img src="https://i.ibb.co/5g8GNqJs/636880279-887390993920777-8859387215607161775-n.jpg" style="width: 70px; border-radius: 50%;">
+                                    <h2 style="margin: 5px 0; border:none; color:#004d40;">PURANGHAT COLLEGE</h2>
+                                    <p style="margin:0; font-size:14px; color:#666;">Admission Confirmation Slip - 2026</p>
+                                </div>
+                                <img src="${data.student_photo}" class="student-photo-large">
+                                <div class="slip-details">
+                                    <p><b>Student Name:</b> ${data.student_name}</p>
+                                    <p><b>User ID:</b> <span style="color:#ff9800; font-weight:bold;">${data.user_id}</span></p>
+                                    <p><b>Father's Name:</b> ${data.father_name}</p>
+                                    <p><b>Mother's Name:</b>${data.mother_name}</p>
+                                    <p><b>SSC Roll:</b> ${data.ssc_roll}</p>
+                                    <p><b>SSC Roll:</b> ${data.ssc_reg}</p>
+                                    <p><b>Mobile:</b> ${data.mobile}</p>
+                                    <p><b>Group:</b> ${data.group}</p>
+                                    <p><b>Applied At:</b> ${data.submitted_at}</p>
+                                </div>
+                                <div style="margin-top: 30px; text-align: center;" class="no-print">
+                                    <button onclick="window.print()" class="btn-print">Print Your Copy</button>
+                                    <button onclick="location.reload()" class="btn-logout">Logout</button>
+                                </div>
+                            </div>`;
+                    } else { alert("ভুল পাসওয়ার্ড!"); }
+                });
+            } else { alert("আইডি পাওয়া যায়নি!"); }
+        });
+    }
+
+    function loadData() {
+        document.getElementById('mainFooter').style.display = 'block';
+        const tableBody = document.getElementById('tableBody');
+        db.ref('admissions').on('value', snapshot => {
+            tableBody.innerHTML = "";
+            snapshot.forEach(child => {
+                const data = child.val();
+                tableBody.innerHTML += `<tr>
+                    <td><img src="${data.student_photo}" class="student-img" onclick="window.open(this.src)"></td>
+                    <td><b>${data.ssc_roll}</b></td>
+                     <td>${data.ssc_reg}</td>
+                    <td>${data.student_name}</td>
+                    <td>${data.father_name}</td>
+                    <td>${data.mobile}</td>
+                    <td>${data.group}</td>
+                    <td>${data.ssc_gpa}</td>
+                    <td>${data.submitted_at}</td>
+                </tr>`;
+            });
+        });
+    }
+
+    function filterByDept(deptName) {
+        db.ref('admissions').orderByChild('group').equalTo(deptName).once('value', snapshot => {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = "";
+            snapshot.forEach(child => {
+                const data = child.val();
+                tableBody.innerHTML += `<tr>
+                    <td><img src="${data.student_photo}" class="student-img"></td>
+                    <td><b>${data.ssc_roll}</b></td>
+                    <td>${data.ssc_reg}</td>
+                    <td>${data.student_name}</td>
+                    <td>${data.father_name}</td>
+                    <td>${data.mobile}</td>
+                    <td>${data.group}</td>
+                    <td>${data.ssc_gpa}</td>
+                    <td>${data.submitted_at}</td>
+                </tr>`;
+            });
+        });
+    }
+
+    function searchTable() {
+        let input = document.getElementById("searchInput").value.toUpperCase();
+        let tr = document.getElementById("studentTable").getElementsByTagName("tr");
+        for (let i = 1; i < tr.length; i++) {
+            tr[i].style.display = tr[i].innerText.toUpperCase().indexOf(input) > -1 ? "" : "none";
+        }
+    }
+</script>
+</body>
+                </html>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
